@@ -3,49 +3,15 @@ package consumer
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/segmentio/kafka-go"
-	"go.temporal.io/sdk/activity"
-	"go.temporal.io/sdk/client"
-	"go.temporal.io/sdk/workflow"
 	"time"
+
+	"go.temporal.io/sdk/activity"
+	"go.temporal.io/sdk/workflow"
 )
 
 const (
 	maxMessage = 2
 )
-
-var (
-	TC     client.Client
-	reader *kafka.Reader
-)
-
-func InitReader(tEndpoint, kEndpoint, kTopic string) error {
-	c, err := client.Dial(client.Options{
-		HostPort: tEndpoint,
-	})
-	if err != nil {
-		return errors.Wrap(err, "Unable to create client")
-	}
-	TC = c
-	brokers := []string{kEndpoint} // Kafka 代理地址
-	reader = kafka.NewReader(kafka.ReaderConfig{
-		Brokers: brokers,
-		Topic:   kTopic,
-		GroupID: "my-group", // 消费者组ID
-	})
-	return nil
-}
-
-func CloseReader() {
-	if reader != nil {
-		reader.Close()
-		reader = nil
-	}
-	if TC != nil {
-		TC.Close()
-	}
-}
 
 // ChildWorkflow is a Workflow Definition
 func ChildWorkflow(ctx workflow.Context, idx int) (int, error) {

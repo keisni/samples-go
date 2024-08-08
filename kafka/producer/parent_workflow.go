@@ -2,14 +2,49 @@ package producer
 
 import (
 	"fmt"
-	enumspb "go.temporal.io/api/enums/v1"
 
+	"github.com/pkg/errors"
+	"github.com/segmentio/kafka-go"
+	"github.com/temporalio/samples-go/kafka/helper"
+	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/workflow"
+
+	enumspb "go.temporal.io/api/enums/v1"
 )
 
-const (
-	childNum = 200
+var (
+	TC        client.Client
+	writer    *kafka.Writer
+	testCount int
 )
+
+func InitWriter(opts *helper.Options) error {
+	c, err := client.Dial(client.Options{
+		HostPort: opts.TemporalEndpoint,
+	})
+	if err != nil {
+		return errors.Wrap(err, "Unable to create client")
+	}
+	TC = c
+
+	brokers := []string{opts.KafkaEndpoint}
+	writer = kafka.NewWriter(kafka.WriterConfig{
+		Brokers:  brokers,
+		Topic:    opts.KafkaTopic,
+		Balancer: &kafka.RoundRobin{},
+	})
+	testCount = opts.Count
+	return nil
+}
+
+func CloseWriter() {
+	if writer != nil {
+		writer.Close()
+	}
+	if TC != nil {
+		TC.Close()
+	}
+}
 
 // ParentWorkflow is a Workflow Definition
 func ParentWorkflow(ctx workflow.Context) (processed int, err error) {
@@ -17,7 +52,7 @@ func ParentWorkflow(ctx workflow.Context) (processed int, err error) {
 	logger.Info("ParentWorkflow begin\n")
 
 	var results []workflow.ChildWorkflowFuture
-	for i := 0; i < childNum; i++ {
+	for i := 0; i < testCount; i++ {
 		childID := fmt.Sprintf("producer_child_workflow:%d", i)
 		cwo := workflow.ChildWorkflowOptions{
 			WorkflowID:            childID,

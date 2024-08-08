@@ -2,46 +2,13 @@ package producer
 
 import (
 	"context"
-	"github.com/pkg/errors"
-	"github.com/segmentio/kafka-go"
-	"go.temporal.io/sdk/activity"
-	"go.temporal.io/sdk/client"
-	"go.temporal.io/sdk/workflow"
 	"strconv"
 	"time"
+
+	"github.com/segmentio/kafka-go"
+	"go.temporal.io/sdk/activity"
+	"go.temporal.io/sdk/workflow"
 )
-
-var (
-	TC     client.Client
-	writer *kafka.Writer
-)
-
-func InitWriter(tEndpoint, kEndpoint, kTopic string) error {
-	c, err := client.Dial(client.Options{
-		HostPort: tEndpoint,
-	})
-	if err != nil {
-		return errors.Wrap(err, "Unable to create client")
-	}
-	TC = c
-
-	brokers := []string{kEndpoint} // Kafka 代理地址
-	writer = kafka.NewWriter(kafka.WriterConfig{
-		Brokers:  brokers,
-		Topic:    kTopic,
-		Balancer: &kafka.RoundRobin{},
-	})
-	return nil
-}
-
-func CloseWriter() {
-	if writer != nil {
-		writer.Close()
-	}
-	if TC != nil {
-		TC.Close()
-	}
-}
 
 // ChildWorkflow is a Workflow Definition
 func ChildWorkflow(ctx workflow.Context, idx int) error {

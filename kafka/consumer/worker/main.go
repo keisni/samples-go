@@ -1,12 +1,13 @@
 package main
 
 import (
-	"flag"
+	"fmt"
 	"log"
 
 	"go.temporal.io/sdk/worker"
 
 	"github.com/temporalio/samples-go/kafka/consumer"
+	"github.com/temporalio/samples-go/kafka/helper"
 )
 
 const (
@@ -14,12 +15,10 @@ const (
 )
 
 func main() {
-	tEndpoint := flag.String("t_endpoint", "localhost:7233", "temporal endpoint")
-	kEndpoint := flag.String("k_endpoint", "localhost:9092", "kafka endpoint")
-	kTopic := flag.String("k_topic", "my_topic", "kafka topic")
-	flag.Parse()
+	opts := helper.ParseOptions()
+	fmt.Printf("opts: %v\n", opts)
 
-	if err := consumer.InitReader(*tEndpoint, *kEndpoint, *kTopic); err != nil {
+	if err := consumer.InitReader(opts); err != nil {
 		log.Fatalln("Init failed", err)
 	}
 	defer consumer.CloseReader()
