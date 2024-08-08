@@ -7,11 +7,17 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-// ParentWorkflow is a Workflow Definition
-func ParentWorkflow(ctx workflow.Context) error {
-	logger := workflow.GetLogger(ctx)
+const (
+	childNum = 200
+)
 
-	for i := 0; i < 200; i++ {
+// ParentWorkflow is a Workflow Definition
+func ParentWorkflow(ctx workflow.Context) (processed int, err error) {
+	logger := workflow.GetLogger(ctx)
+	logger.Info("ParentWorkflow begin.\n")
+
+	var results []workflow.ChildWorkflowFuture
+	for i := 0; i < childNum; i++ {
 		childID := fmt.Sprintf("producer_child_workflow:%d", i)
 		cwo := workflow.ChildWorkflowOptions{
 			WorkflowID:            childID,
@@ -19,13 +25,20 @@ func ParentWorkflow(ctx workflow.Context) error {
 		}
 
 		ctx = workflow.WithChildOptions(ctx, cwo)
-		var result string
-		err := workflow.ExecuteChildWorkflow(ctx, ChildWorkflow, i).Get(ctx, &result)
-		if err != nil {
-			logger.Error("Consumer parent execution received child execution failure.", "Error", err)
-			return err
-		}
+		child := workflow.ExecuteChildWorkflow(ctx, ChildWorkflow, i)
+		results = append(results, child)
 	}
-	logger.Info("Consumer parent execution completed.")
-	return nil
+	// Waits for all child workflows to complete
+	result := 0
+	for _, childResult := range results {
+		var ret int
+		err := childResult.Get(ctx, &ret) // blocks until the child completion
+		if err != nil {
+			logger.Error("child execution failure.", "Error", err)
+			continue
+		}
+		result += ret
+	}
+	logger.Info("ParentWorkflow finish.", "result", result)
+	return result, nil
 }

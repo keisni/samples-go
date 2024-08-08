@@ -1,9 +1,9 @@
 package main
 
 import (
+	"flag"
 	"log"
 
-	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
 
 	"github.com/temporalio/samples-go/kafka/consumer"
@@ -14,23 +14,23 @@ const (
 )
 
 func main() {
-	// The client and worker are heavyweight objects that should be created once per process.
-	c, err := client.Dial(client.Options{
-		HostPort: hostPort,
-	})
-	if err != nil {
-		log.Fatalln("Unable to create client", err)
+	tEndpoint := flag.String("t_endpoint", "localhost:7233", "temporal endpoint")
+	kEndpoint := flag.String("k_endpoint", "localhost:9092", "kafka endpoint")
+	kTopic := flag.String("k_topic", "my_topic", "kafka topic")
+	flag.Parse()
+
+	if err := consumer.InitReader(*tEndpoint, *kEndpoint, *kTopic); err != nil {
+		log.Fatalln("Init failed", err)
 	}
-	defer c.Close()
-	consumer.InitReader()
 	defer consumer.CloseReader()
 
-	w := worker.New(c, "producer", worker.Options{})
+	w := worker.New(consumer.TC, "producer", worker.Options{})
 
 	w.RegisterWorkflow(consumer.ParentWorkflow)
 	w.RegisterWorkflow(consumer.ChildWorkflow)
+	w.RegisterActivity(consumer.Activity)
 
-	err = w.Run(worker.InterruptCh())
+	err := w.Run(worker.InterruptCh())
 	if err != nil {
 		log.Fatalln("Unable to start worker", err)
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log"
 
 	"go.temporal.io/sdk/client"
@@ -9,14 +10,13 @@ import (
 	"github.com/temporalio/samples-go/kafka/consumer"
 )
 
-const (
-	hostPort = "192.168.49.2:30880"
-)
-
 func main() {
+	tEndpoint := flag.String("t_endpoint", "localhost:7233", "temporal endpoint")
+	flag.Parse()
+
 	// The client is a heavyweight object that should be created once per process.
 	c, err := client.Dial(client.Options{
-		HostPort: hostPort,
+		HostPort: *tEndpoint,
 	})
 	if err != nil {
 		log.Fatalln("Unable to create client", err)
