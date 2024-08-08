@@ -23,7 +23,7 @@ func main() {
 	}
 	defer consumer.CloseReader()
 
-	w := worker.New(consumer.TC, "producer", worker.Options{})
+	w := worker.New(consumer.TC, "consumer", worker.Options{})
 
 	w.RegisterWorkflow(consumer.ParentWorkflow)
 	w.RegisterWorkflow(consumer.ChildWorkflow)

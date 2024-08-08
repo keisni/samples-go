@@ -1,6 +1,6 @@
 WORK_DIR=$(dirname "$0")
 SERVICE_LIST="producer-worker consumer-worker"
-ARGS="--t_endpoint=localhost:7233 --k_endpoint=localhost:9092 --k_topic=my_topic --count=1"
+ARGS="--t_endpoint=192.168.49.2:30880 --k_endpoint=192.168.49.2:32059 --k_topic=my-topic --count=1"
 
 usage()
 {

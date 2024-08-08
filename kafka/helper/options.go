@@ -16,7 +16,7 @@ func ParseOptions() *Options {
 
 	flag.StringVar(&opts.TemporalEndpoint, "t_endpoint", "localhost:7233", "temporal endpoint")
 	flag.StringVar(&opts.KafkaEndpoint, "k_endpoint", "localhost:9092", "kafka endpoint")
-	flag.StringVar(&opts.KafkaTopic, "k_topic", "my_topic", "kafka topic")
+	flag.StringVar(&opts.KafkaTopic, "k_topic", "my-topic", "kafka topic")
 	flag.IntVar(&opts.Count, "count", 1, "batch count")
 	flag.Parse()
 

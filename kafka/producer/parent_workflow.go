@@ -48,8 +48,7 @@ func CloseWriter() {
 
 // ParentWorkflow is a Workflow Definition
 func ParentWorkflow(ctx workflow.Context) (processed int, err error) {
-	logger := workflow.GetLogger(ctx)
-	logger.Info("ParentWorkflow begin\n")
+	fmt.Printf("ParentWorkflow begin\n")
 
 	var results []workflow.ChildWorkflowFuture
 	for i := 0; i < testCount; i++ {
@@ -65,14 +64,14 @@ func ParentWorkflow(ctx workflow.Context) (processed int, err error) {
 	}
 	// Waits for all child workflows to complete
 	result := 0
-	for _, childResult := range results {
-		err := childResult.Get(ctx, nil) // blocks until the child completion
-		if err != nil {
-			logger.Error("child execution failure.", "Error", err)
+	for _, child := range results {
+		var ret int
+		if childErr := child.Get(ctx, &ret); childErr != nil {
+			fmt.Printf("child execution failure. %v\n", childErr)
 			continue
 		}
-		result += 1
+		result += ret
 	}
-	logger.Info("ParentWorkflow finish.", "result", result)
+	fmt.Printf("ParentWorkflow finish. result:%d\n", result)
 	return result, nil
 }
