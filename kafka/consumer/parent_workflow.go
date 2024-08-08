@@ -1,9 +1,8 @@
 package consumer
 
 import (
+	"context"
 	"fmt"
-	enumspb "go.temporal.io/api/enums/v1"
-
 	"github.com/pkg/errors"
 	"github.com/segmentio/kafka-go"
 	"github.com/temporalio/samples-go/kafka/helper"
@@ -49,12 +48,18 @@ func CloseReader() {
 func ParentWorkflow(ctx workflow.Context) (processed int, err error) {
 	fmt.Printf("ParentWorkflow begin.\n")
 
+	for i := 0; i < testCount; i++ {
+		childID := fmt.Sprintf("consumer_child_workflow:%d", i)
+		if termErr := TC.TerminateWorkflow(context.Background(), childID, "", "by_parent"); termErr == nil {
+			fmt.Sprintf("terminated child workflow: %s\n", childID)
+		}
+	}
+
 	var results []workflow.ChildWorkflowFuture
 	for i := 0; i < testCount; i++ {
 		childID := fmt.Sprintf("consumer_child_workflow:%d", i)
 		cwo := workflow.ChildWorkflowOptions{
-			WorkflowID:            childID,
-			WorkflowIDReusePolicy: enumspb.WORKFLOW_ID_REUSE_POLICY_TERMINATE_IF_RUNNING,
+			WorkflowID: childID,
 		}
 
 		ctx = workflow.WithChildOptions(ctx, cwo)

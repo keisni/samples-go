@@ -1,6 +1,7 @@
 package producer
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -8,8 +9,6 @@ import (
 	"github.com/temporalio/samples-go/kafka/helper"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/workflow"
-
-	enumspb "go.temporal.io/api/enums/v1"
 )
 
 var (
@@ -50,12 +49,18 @@ func CloseWriter() {
 func ParentWorkflow(ctx workflow.Context) (processed int, err error) {
 	fmt.Printf("ParentWorkflow begin\n")
 
+	for i := 0; i < testCount; i++ {
+		childID := fmt.Sprintf("producer_child_workflow:%d", i)
+		if termErr := TC.TerminateWorkflow(context.Background(), childID, "", "by_parent"); termErr == nil {
+			fmt.Sprintf("terminated child workflow: %s\n", childID)
+		}
+	}
+
 	var results []workflow.ChildWorkflowFuture
 	for i := 0; i < testCount; i++ {
 		childID := fmt.Sprintf("producer_child_workflow:%d", i)
 		cwo := workflow.ChildWorkflowOptions{
-			WorkflowID:            childID,
-			WorkflowIDReusePolicy: enumspb.WORKFLOW_ID_REUSE_POLICY_TERMINATE_IF_RUNNING,
+			WorkflowID: childID,
 		}
 
 		ctx = workflow.WithChildOptions(ctx, cwo)
