@@ -51,7 +51,7 @@ func ParentWorkflow(ctx workflow.Context) (processed int, err error) {
 
 	var results []workflow.ChildWorkflowFuture
 	for i := 0; i < testCount; i++ {
-		childID := fmt.Sprintf("producer_child_workflow:%d", i)
+		childID := fmt.Sprintf("consumer_child_workflow:%d", i)
 		cwo := workflow.ChildWorkflowOptions{
 			WorkflowID:            childID,
 			WorkflowIDReusePolicy: enumspb.WORKFLOW_ID_REUSE_POLICY_TERMINATE_IF_RUNNING,
